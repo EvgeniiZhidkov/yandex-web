@@ -62,7 +62,7 @@ class WeatherBot:
                         photo_file.write(photo.content)
 
                     with open('weather_image.png', 'rb') as photo_file:
-                        weather_caption = f"<b>Текущая погода в {city}:</b>\n{weather_data['current']['condition']['text']}, температура {weather_data['current']['temp_c']}°C, ощущается как {weather_data['current']['feelslike_c']}°C, скорость ветра {weather_data['current']['wind_kph']} км/ч."
+                        weather_caption = f"<b>Текущая погода в {city}:</b>\n{weather_data['current']['condition']['text']}, температура {weather_data['current']['temp_c']}°C, ощущается как {weather_data['current']['feelslike_c']}°C, скорость ветра {weather_data['current']['wind_kph']} км/ч, влажность {weather_data['current']['humidity']}%, давление {weather_data['current']['pressure_mb']} мб."
                         local_time_caption = f"<b>Местное время в {city}:</b>\n{self.format_local_time(local_time_data['datetime'])}"
                         clothing_advice = self.get_clothing_advice(weather_data['current']['temp_c'])
 
@@ -84,6 +84,14 @@ class WeatherBot:
                             self.plot_precipitation_forecast(forecast_data)
                             with open('precipitation_forecast.png', 'rb') as precipitation_file:
                                 self.bot.send_photo(message.chat.id, precipitation_file, caption="Прогноз объема осадков на 5 дней")
+                            self.plot_humidity_forecast(forecast_data)
+                            with open('humidity_forecast.png', 'rb') as humidity_file:
+                                self.bot.send_photo(message.chat.id, humidity_file, caption="Прогноз влажности на 5 дней")
+
+                            # Добавляем график давления на 5 дней
+                            self.plot_pressure_forecast(forecast_data)
+                            with open('pressure_forecast.png', 'rb') as pressure_file:
+                                self.bot.send_photo(message.chat.id, pressure_file, caption="Прогноз давления на 5 дней")
                         else:
                             self.bot.reply_to(message, "Извините, не удалось получить прогноз погоды.")
 
@@ -247,6 +255,40 @@ class WeatherBot:
         plt.grid(True)
         plt.tight_layout()
         plt.savefig('precipitation_forecast.png')
+
+    def plot_humidity_forecast(self, forecast_data):
+        dates = []
+        humidity = []
+        for day in forecast_data['forecast']['forecastday']:
+            date = datetime.strptime(day['date'], '%Y-%m-%d').date()
+            humidity_data = day['day']['avghumidity']
+            dates.append(date)
+            humidity.append(humidity_data)
+        plt.figure(figsize=(8, 5))
+        plt.plot(dates, humidity, marker='o', linestyle='-')
+        plt.title('Прогноз влажности на 5 дней')
+        plt.xlabel('Дата')
+        plt.ylabel('Влажность, %')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('humidity_forecast.png')
+
+    def plot_pressure_forecast(self, forecast_data):
+        dates = []
+        pressures = []
+        for day in forecast_data['forecast']['forecastday']:
+            date = datetime.strptime(day['date'], '%Y-%m-%d').date()
+            pressure = day['day']['avgtemp_c']
+            dates.append(date)
+            pressures.append(pressure)
+        plt.figure(figsize=(8, 5))
+        plt.plot(dates, pressures, marker='o', linestyle='-')
+        plt.title('Прогноз давления на 5 дней')
+        plt.xlabel('Дата')
+        plt.ylabel('Давление, мм рт. ст.')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('pressure_forecast.png')
 
     def save_feedback(self, message):
         feedback = message.text
