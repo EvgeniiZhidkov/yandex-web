@@ -14,7 +14,6 @@ import requests
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
-
 TELEGRAM_BOT_TOKEN = '7138618116:AAHMWU4rmmD-W48pIecOrKBxAl6z6D4ZEbI'
 WEATHER_API_KEY = '4de6ee8e61214f0182e130103242804'
 
@@ -75,6 +74,11 @@ class WeatherBot:
                             self.plot_temperature_forecast(forecast_data)
                             with open('temperature_forecast.png', 'rb') as forecast_file:
                                 self.bot.send_photo(message.chat.id, forecast_file, caption="Прогноз температуры на 5 дней")
+
+                            # Добавляем график скорости ветра на 5 дней
+                            self.plot_wind_speed_forecast(forecast_data)
+                            with open('wind_speed_forecast.png', 'rb') as wind_speed_file:
+                                self.bot.send_photo(message.chat.id, wind_speed_file, caption="Прогноз скорости ветра на 5 дней")
                         else:
                             self.bot.reply_to(message, "Извините, не удалось получить прогноз погоды.")
 
@@ -205,6 +209,23 @@ class WeatherBot:
         plt.tight_layout()
         plt.savefig('temperature_forecast.png')
 
+    def plot_wind_speed_forecast(self, forecast_data):
+        dates = []
+        wind_speeds = []
+        for day in forecast_data['forecast']['forecastday']:
+            date = datetime.strptime(day['date'], '%Y-%m-%d').date()
+            wind_speed = day['day']['maxwind_kph']
+            dates.append(date)
+            wind_speeds.append(wind_speed)
+        plt.figure(figsize=(8, 5))
+        plt.plot(dates, wind_speeds, marker='o', linestyle='-')
+        plt.title('Прогноз скорости ветра на 5 дней')
+        plt.xlabel('Дата')
+        plt.ylabel('Скорость ветра, км/ч')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('wind_speed_forecast.png')
+
     def save_feedback(self, message):
         feedback = message.text
         with open(self.feedback_file, 'a', encoding='utf-8') as file:
@@ -215,4 +236,5 @@ class WeatherBot:
 if __name__ == "__main__":
     bot = WeatherBot(TELEGRAM_BOT_TOKEN)
     bot.start()
+
 
