@@ -14,6 +14,7 @@ import requests
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
+
 TELEGRAM_BOT_TOKEN = '7138618116:AAHMWU4rmmD-W48pIecOrKBxAl6z6D4ZEbI'
 WEATHER_API_KEY = '4de6ee8e61214f0182e130103242804'
 
@@ -31,6 +32,7 @@ class WeatherBot:
         }
         self.registered_users_file = 'registered_users.txt'
         self.feedback_file = 'feedback.txt'
+        self.fl = False
 
     def start(self):
         @self.bot.message_handler(commands=['start'])
@@ -77,7 +79,7 @@ class WeatherBot:
                             self.bot.reply_to(message, "Извините, не удалось получить прогноз погоды.")
 
                     # Запрашиваем отзыв
-                    self.bot.send_message(message.chat.id, "Пожалуйста, оставьте ваш отзыв о боте командой /feedback, чтобы мы могли улучшить его.")
+                    self.bot.send_message(message.chat.id, "Пожалуйста, оставьте ваш отзыв о боте, чтобы мы могли улучшить его.")
                 else:
                     self.bot.reply_to(message, "Извините, не удалось получить информацию о погоде для этого города.")
             else:
@@ -104,14 +106,17 @@ class WeatherBot:
         @self.bot.message_handler(commands=['feedback'])
         def feedback_command(message):
             self.bot.reply_to(message, "Напишите ваш отзыв о боте.")
+            self.fl = True
 
         @self.bot.message_handler(func=lambda message: True)
         def handle_message(message):
-            if message.text == '/feedback':
-                self.bot.reply_to(message, "Напишите ваш отзыв о боте.")
-            else:
+            if self.fl:
                 self.save_feedback(message)
-                self.bot.reply_to(message, "Спасибо за ваш отзыв! Он был сохранен.")
+            elif message.text == '/help' or message.text == '?':
+                commands = "\n".join(['/start - начать работу', '/register - зарегистрироваться', '/delete_account - удалить аккаунт', '/feedback - оставить отзыв'])
+                self.bot.reply_to(message, f" Вот список доступных команд:\n{commands}\nCписок городов, для которых доступна погода:\n{', '.join(self.cities)}")
+            else:
+                self.bot.reply_to(message, "К сожалению, такой команды не существует. Если вам нужна помощь, воспользуйтесь командой /help.")
 
         self.bot.polling()
 
@@ -204,6 +209,8 @@ class WeatherBot:
         feedback = message.text
         with open(self.feedback_file, 'a', encoding='utf-8') as file:
             file.write(feedback + '\n')
+        self.fl = False
+        self.bot.reply_to(message, "Спасибо за ваш отзыв! Он был сохранен.")
 
 if __name__ == "__main__":
     bot = WeatherBot(TELEGRAM_BOT_TOKEN)
