@@ -79,6 +79,11 @@ class WeatherBot:
                             self.plot_wind_speed_forecast(forecast_data)
                             with open('wind_speed_forecast.png', 'rb') as wind_speed_file:
                                 self.bot.send_photo(message.chat.id, wind_speed_file, caption="Прогноз скорости ветра на 5 дней")
+
+                            # Добавляем график объема осадков на 5 дней
+                            self.plot_precipitation_forecast(forecast_data)
+                            with open('precipitation_forecast.png', 'rb') as precipitation_file:
+                                self.bot.send_photo(message.chat.id, precipitation_file, caption="Прогноз объема осадков на 5 дней")
                         else:
                             self.bot.reply_to(message, "Извините, не удалось получить прогноз погоды.")
 
@@ -225,6 +230,23 @@ class WeatherBot:
         plt.grid(True)
         plt.tight_layout()
         plt.savefig('wind_speed_forecast.png')
+
+    def plot_precipitation_forecast(self, forecast_data):
+        dates = []
+        precipitations = []
+        for day in forecast_data['forecast']['forecastday']:
+            date = datetime.strptime(day['date'], '%Y-%m-%d').date()
+            precipitation = day['day']['totalprecip_mm']
+            dates.append(date)
+            precipitations.append(precipitation)
+        plt.figure(figsize=(8, 5))
+        plt.plot(dates, precipitations, marker='o', linestyle='-')
+        plt.title('Прогноз объема осадков на 5 дней')
+        plt.xlabel('Дата')
+        plt.ylabel('Объем осадков, мм')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig('precipitation_forecast.png')
 
     def save_feedback(self, message):
         feedback = message.text
