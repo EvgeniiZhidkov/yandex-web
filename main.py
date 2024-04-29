@@ -75,6 +75,9 @@ class WeatherBot:
                                 self.bot.send_photo(message.chat.id, forecast_file, caption="Прогноз температуры на 5 дней")
                         else:
                             self.bot.reply_to(message, "Извините, не удалось получить прогноз погоды.")
+
+                    # Запрашиваем отзыв
+                    self.bot.send_message(message.chat.id, "Пожалуйста, оставьте ваш отзыв о боте командой /feedback, чтобы мы могли улучшить его.")
                 else:
                     self.bot.reply_to(message, "Извините, не удалось получить информацию о погоде для этого города.")
             else:
@@ -205,3 +208,4 @@ class WeatherBot:
 if __name__ == "__main__":
     bot = WeatherBot(TELEGRAM_BOT_TOKEN)
     bot.start()
+
