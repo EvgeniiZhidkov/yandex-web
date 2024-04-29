@@ -18,8 +18,7 @@ class WeatherBot:
         def send_welcome(message):
             user_id = message.from_user.id
             if not self.is_registered(user_id):
-                self.register_user(user_id)
-                self.bot.reply_to(message, "Привет! Я бот, который дает информацию о погоде. Вы успешно зарегистрированы.")
+                self.bot.reply_to(message, "Привет! Я бот, который дает информацию о погоде. Пожалуйста, зарегистрируйтесь с помощью команды /register.")
             else:
                 markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
                 for city in self.cities:
@@ -28,21 +27,25 @@ class WeatherBot:
 
         @self.bot.message_handler(func=lambda message: message.text in self.cities)
         def get_weather(message):
-            city = message.text
-            weather_data = self.fetch_weather(city)
+            user_id = message.from_user.id
+            if self.is_registered(user_id):
+                city = message.text
+                weather_data = self.fetch_weather(city)
 
-            if weather_data:
-                weather_icon_code = weather_data['current']['condition']['icon']
-                weather_image_url = f'http:{weather_icon_code}'
-                photo = requests.get(weather_image_url)
+                if weather_data:
+                    weather_icon_code = weather_data['current']['condition']['icon']
+                    weather_image_url = f'http:{weather_icon_code}'
+                    photo = requests.get(weather_image_url)
 
-                with open('weather_image.png', 'wb') as photo_file:
-                    photo_file.write(photo.content)
+                    with open('weather_image.png', 'wb') as photo_file:
+                        photo_file.write(photo.content)
 
-                with open('weather_image.png', 'rb') as photo_file:
-                    self.bot.send_photo(message.chat.id, photo_file, caption=f"Текущая погода в {city}: {weather_data['current']['condition']['text']}, температура {weather_data['current']['temp_c']}°C, ощущается как {weather_data['current']['feelslike_c']}°C.")
+                    with open('weather_image.png', 'rb') as photo_file:
+                        self.bot.send_photo(message.chat.id, photo_file, caption=f"Текущая погода в {city}: {weather_data['current']['condition']['text']}, температура {weather_data['current']['temp_c']}°C, ощущается как {weather_data['current']['feelslike_c']}°C.")
+                else:
+                    self.bot.reply_to(message, "Извините, не удалось получить информацию о погоде для этого города.")
             else:
-                self.bot.reply_to(message, "Извините, не удалось получить информацию о погоде для этого города.")
+                self.bot.reply_to(message, "Пожалуйста, зарегистрируйтесь с помощью команды /register.")
 
         @self.bot.message_handler(commands=['register'])
         def register_user_command(message):
@@ -65,9 +68,12 @@ class WeatherBot:
         self.bot.polling()
 
     def is_registered(self, user_id):
-        with open(self.registered_users_file, 'r') as file:
-            registered_users = file.read().splitlines()
-        return str(user_id) in registered_users
+        try:
+            with open(self.registered_users_file, 'r') as file:
+                registered_users = file.read().splitlines()
+            return str(user_id) in registered_users
+        except FileNotFoundError:
+            return False
 
     def register_user(self, user_id):
         with open(self.registered_users_file, 'a') as file:
@@ -92,3 +98,4 @@ class WeatherBot:
 if __name__ == "__main__":
     bot = WeatherBot('7138618116:AAHMWU4rmmD-W48pIecOrKBxAl6z6D4ZEbI')
     bot.start()
+
