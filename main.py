@@ -140,7 +140,7 @@ class WeatherBot:
             if self.fl:
                 self.save_feedback(message)
             elif message.text == '/help' or message.text == '?':
-                commands = "\n".join(['/start - начать работу', '/register - зарегистрироваться', '/delete_account - удалить аккаунт', '/feedback - оставить отзыв'])
+                commands = "\n".join(['/start - начать работу', '/register - зарегистрироваться', '/delete_account - удалить аккаунт', '/feedback - оставить отзыв', '/profile - посмотреть информацию о своем аккаунте'])
                 self.bot.reply_to(message, f" Вот список доступных команд:\n{commands}\nCписок городов, для которых доступна погода:\n{', '.join(self.cities)}")
             else:
                 self.bot.reply_to(message, "К сожалению, такой команды не существует. Если вам нужна помощь, воспользуйтесь командой /help.")
