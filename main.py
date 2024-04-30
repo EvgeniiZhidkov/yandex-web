@@ -190,7 +190,8 @@ class WeatherBot:
             lines = file.readlines()
         with open(self.registered_users_file, 'w') as file:
             for line in lines:
-                if line.strip() != str(user_id):
+                x = line.split()
+                if x[0] != str(user_id):
                     file.write(line)
 
     def fetch_weather(self, city):
