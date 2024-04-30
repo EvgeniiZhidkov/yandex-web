@@ -52,6 +52,7 @@ class WeatherBot:
                 city = message.text
                 weather_data = self.fetch_weather(city)
                 local_time_data = self.get_local_time(city)
+                self.update(message.from_user.id)
 
                 if weather_data and local_time_data:
                     weather_icon_code = weather_data['current']['condition']['icon']
@@ -146,23 +147,37 @@ class WeatherBot:
 
         self.bot.polling()
 
-
     def is_registered(self, user_id):
         try:
             with open(self.registered_users_file, 'r') as file:
                 registered_users = file.read().splitlines()
-            return str(user_id) in registered_users
+            for a in registered_users:
+                x = a.split()
+                if x[0] == str(user_id):
+                    return True
+            return False
         except FileNotFoundError:
             return False
+
+    def update(self, user_id):
+        f = open(self.registered_users_file, 'r')
+        lines = f.readlines()
+        f = open(self.registered_users_file, 'w')
+        for line in lines:
+            x = line.split()
+            if x[0] == str(user_id):
+                x[1] = str(int(x[1].strip()) + 1)
+            f.write(' '.join(x) + '\n')
 
     def get_num_requests(self, user_id):
         try:
             with open(self.registered_users_file, 'r') as file:
                 lines = file.readlines()
             for line in lines:
-                if str(user_id) in line:
-                    data = line.split(',')
-                    return int(data[1])
+                x = line.split()
+                x[1] = int(x[1].strip())
+                if str(user_id) == x[0]:
+                    return int(x[1])
         except FileNotFoundError:
             return 0
 
