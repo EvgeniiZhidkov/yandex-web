@@ -125,6 +125,15 @@ class WeatherBot:
             self.bot.reply_to(message, "Напишите ваш отзыв о боте.")
             self.fl = True
 
+        @self.bot.message_handler(commands=['profile'])
+        def profile_command(message):
+            user_id = message.from_user.id
+            if self.is_registered(user_id):
+                num_requests = self.get_num_requests(user_id)
+                self.bot.reply_to(message, f"Ваш профиль:\n- Количество запросов погоды: {num_requests}")
+            else:
+                self.bot.reply_to(message, "Пожалуйста, зарегистрируйтесь с помощью команды /register.")
+
         @self.bot.message_handler(func=lambda message: True)
         def handle_message(message):
             if self.fl:
@@ -137,6 +146,7 @@ class WeatherBot:
 
         self.bot.polling()
 
+
     def is_registered(self, user_id):
         try:
             with open(self.registered_users_file, 'r') as file:
@@ -145,9 +155,20 @@ class WeatherBot:
         except FileNotFoundError:
             return False
 
+    def get_num_requests(self, user_id):
+        try:
+            with open(self.registered_users_file, 'r') as file:
+                lines = file.readlines()
+            for line in lines:
+                if str(user_id) in line:
+                    data = line.split(',')
+                    return int(data[1])
+        except FileNotFoundError:
+            return 0
+
     def register_user(self, user_id):
         with open(self.registered_users_file, 'a') as file:
-            file.write(str(user_id) + '\n')
+            file.write(str(user_id) + " 0" + '\n')
 
     def delete_account(self, user_id):
         with open(self.registered_users_file, 'r') as file:
@@ -289,6 +310,7 @@ class WeatherBot:
         plt.grid(True)
         plt.tight_layout()
         plt.savefig('pressure_forecast.png')
+
 
     def save_feedback(self, message):
         feedback = message.text
